@@ -22,6 +22,7 @@ def test_matrix_neuron_prediction() -> None:
         [0.75, 0.3, 0.1, 0.9],
         [0.1, 0.7, 0.6, 0.2]], dtype=float, ndmin=2)
         
+        
     y = np.array([
         [0.1, 0.5, 0.1, 0.7],
         [1.0, 0.2, 0.3, 0.6],
