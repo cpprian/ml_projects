@@ -1,5 +1,5 @@
-import numpy as np
 from neural_network_pkg.gradient_decent import GradientDecent
+import numpy as np
 
 def test_one_neuron_prediction() -> None:
     alpha = 0.1

@@ -1,14 +1,19 @@
 import numpy as np
 import random
 import copy
-from neuron import deep_neural_network
+from neural_network_pkg.neuron import deep_neural_network
 
 class Layer:
     wages = None
+    X = None
+    Y = None
 
-    def __init__(self, file_name) -> None:
-        self.load_weights(file_name)
+    def __init__(self, file_name="") -> None:
+        if file_name != "":
+            self.load_weights(file_name)
 
+    def create_weights(self, row, col):
+        self.wages = np.random.uniform(0, 1, size=(row, col))
 
     def add_layer(self, n, weight_min_value=0, weight_max_value=1):
         if weight_max_value < weight_min_value:
@@ -55,3 +60,31 @@ class Layer:
             return
         else:   
             self.wages.append(new_wage)
+
+
+    def load_input_and_goal(self, filename):
+        with open(filename, "r") as f:
+            lines = f.readlines()
+
+            for line in lines:
+                row = np.fromstring(line, dtype=float, sep="\n")
+
+                x = row[:3]
+                y = row[3]
+                if self.X is None:
+                    self.X = x
+                    continue
+
+                if self.Y is None:
+                    self.Y = y
+                    continue
+
+                self.X = np.vstack((self.X, x))
+                self.Y = np.vstack((self.Y, y))
+
+    def transpose_input(self):
+        self.X = self.X.T
+
+    def transpose_goal(self):
+        print(self.Y)
+        self.Y = self.Y.T

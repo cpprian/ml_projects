@@ -23,8 +23,26 @@ class GradientDecent:
                 self.w -= self.alpha * d
             self.err = err_era
 
-    def delta(self, x_i, y_i, bias=0):
+    def train_until(self, per):
+        while True:
+            self.train(1)
+
+            # if accuracy is not good enough, train again
+            if round(self.err, 5) < per:
+                break
+
+    def predict(self, x_i, bias=0):
         self.prediction = neural_network(x_i, self.w, bias)
+
+        # find largest element from prediction and set to 1 and others to 0
+        pred = np.argmax(self.prediction)
+        self.prediction = np.zeros(self.prediction.shape)
+        self.prediction[pred, 0] = 1    
+
+        # TODO: store result to all_preiction to compare with goal later
+
+    def delta(self, x_i, y_i, bias=0):
+        self.predict(x_i, bias)
         return 2/self.n * np.outer(self.prediction - y_i, x_i)
 
     def error(self, y_i):
@@ -33,4 +51,3 @@ class GradientDecent:
             sum_prediction_goal += np.square(self.prediction[i, 0] - y_i[i, 0])
 
         return sum_prediction_goal / self.n
-
