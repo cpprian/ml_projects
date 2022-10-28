@@ -3,13 +3,12 @@ import numpy as np
 
 def test_one_neuron_prediction() -> None:
     alpha = 0.1
-    times = 5
     x = np.array([2], dtype=float, ndmin=2)
     goal = np.array([0.8], dtype=float, ndmin=2)
     w = np.array([0.5], dtype=float, ndmin=2)
 
     gd = GradientDecent(alpha, x, goal, w)
-    gd.train(times[0])
+    gd.train(5)
     assert gd.prediction == 0.80032
     assert np.round(gd.err, 10) == 0.0000001024
 

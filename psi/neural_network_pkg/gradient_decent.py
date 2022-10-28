@@ -26,7 +26,6 @@ class GradientDecent:
                 self.find_max(i)
 
             self.err = err_era
-            print("numer: ", j)
 
     def predict(self, x_i, bias=0):
         self.prediction = neural_network(x_i, self.w, bias)  

@@ -39,16 +39,13 @@ def return_color(goal):
 
 
 if __name__ == '__main__':
-    alpha = 0.2
+    alpha = 0.002
     neurons = 4
 
     layer = Layer()
     layer.load_input_and_goal("psi/static/color_training.txt")
     layer.transpose_input()
-
-    # TODO: gdzieś ucina jedno
     layer.transpose_goal()
-
     layer.Y = make_goal_to_0_1(neurons, layer.Y)
 
     # generate weights (neurons x X.shape[1]) 
@@ -56,7 +53,7 @@ if __name__ == '__main__':
 
     # learn neural network
     gd = GradientDecent(alpha, layer.X, layer.Y, layer.wages)
-    gd.train(5000)
+    gd.train(1000)
 
     # load color_test.txt and predict the color
     test_layer = Layer()
