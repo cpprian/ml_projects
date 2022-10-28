@@ -12,8 +12,10 @@ class GradientDecent:
         self.n = self.goal.shape[0]
         self.err = 0
 
+        self.all_prediction = np.zeros(self.goal.shape)
+
     def train(self, time):
-        for _ in range(time):
+        for j in range(time):
             err_era = 0
             for i in range(self.goal.shape[1]):
                 y_i = np.expand_dims(self.goal[:, i], axis=1)
@@ -21,25 +23,20 @@ class GradientDecent:
                 d = self.delta(self.x[:, i], y_i)
                 err_era += self.error(y_i)
                 self.w -= self.alpha * d
+                self.find_max(i)
+
             self.err = err_era
-
-    def train_until(self, per):
-        while True:
-            self.train(1)
-
-            # if accuracy is not good enough, train again
-            if round(self.err, 5) < per:
-                break
+            print("numer: ", j)
 
     def predict(self, x_i, bias=0):
-        self.prediction = neural_network(x_i, self.w, bias)
+        self.prediction = neural_network(x_i, self.w, bias)  
 
-        # find largest element from prediction and set to 1 and others to 0
+    def find_max(self, col):
         pred = np.argmax(self.prediction)
-        self.prediction = np.zeros(self.prediction.shape)
-        self.prediction[pred, 0] = 1    
 
-        # TODO: store result to all_preiction to compare with goal later
+        # clean up the last prediction max
+        self.all_prediction[:, col] = 0
+        self.all_prediction[pred, col] = 1
 
     def delta(self, x_i, y_i, bias=0):
         self.predict(x_i, bias)
@@ -51,3 +48,22 @@ class GradientDecent:
             sum_prediction_goal += np.square(self.prediction[i, 0] - y_i[i, 0])
 
         return sum_prediction_goal / self.n
+
+
+    def test_prediction(self):
+        for i in range(self.goal.shape[1]):
+            self.predict(self.x[:, i])
+            self.find_max(i)
+
+    def accuracy(self):
+        acc = 0
+
+        self.test_prediction()
+        for i in range(self.goal.shape[1]):
+            if np.array_equal(self.all_prediction[:, i], self.goal[:, i]):
+                acc += 1
+
+        print(acc)
+        print(self.goal.shape[1])
+
+        return acc / self.goal.shape[1]

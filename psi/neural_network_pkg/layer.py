@@ -67,10 +67,11 @@ class Layer:
             lines = f.readlines()
 
             for line in lines:
-                row = np.fromstring(line, dtype=float, sep="\n")
+                row = np.fromstring(line, dtype=float, sep=" \t\n")
 
                 x = row[:3]
-                y = row[3]
+                y = row[3:]
+
                 if self.X is None:
                     self.X = x
                     continue
@@ -86,5 +87,4 @@ class Layer:
         self.X = self.X.T
 
     def transpose_goal(self):
-        print(self.Y)
         self.Y = self.Y.T
