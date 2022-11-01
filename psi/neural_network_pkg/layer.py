@@ -8,12 +8,16 @@ class Layer:
     X = None
     Y = None
 
-    def __init__(self, file_name="") -> None:
+    def __init__(self, x=None, y=None, w=None, file_name="") -> None:
         if file_name != "":
             self.load_weights(file_name)
 
+        X = x
+        Y = y
+        wages = w
+
     def create_weights(self, row, col):
-        self.wages = np.random.uniform(0, 1, size=(row, col))
+        self.wages = np.random.uniform(-1, 1, size=(row, col))
 
     def add_layer(self, n, weight_min_value=0, weight_max_value=1):
         if weight_max_value < weight_min_value:
@@ -29,12 +33,6 @@ class Layer:
                             weight_max_value, 
                             size=(neurons, w))
             self.add_new_wage(new_wage)
-
-
-    def predict(self, input_n):
-        output_n = copy.deepcopy(input_n)
-
-        return deep_neural_network(output_n, self.wages, 0)
 
 
     def load_weights(self, file_name):

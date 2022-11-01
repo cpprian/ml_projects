@@ -3,19 +3,22 @@ from neural_network_pkg.neuron import neural_network
 
 class GradientDecent:
 
-    def __init__(self, alpha, x, goal, w):
+    def __init__(self, alpha=None, x=None, goal=None, w=None):
         self.alpha = alpha
         self.x = x
         self.goal = goal
         self.w = w
         self.prediction = None
-        self.n = self.goal.shape[0]
+        self.all_prediction = None
+        self.n = None
         self.err = 0
 
-        self.all_prediction = np.zeros(self.goal.shape)
+        if self.goal is not None:
+            self.n = self.goal.shape[0]
+            self.all_prediction = np.zeros(self.goal.shape)
 
-    def train(self, time):
-        for j in range(time):
+    def train(self, time, func=None):
+        for _ in range(time):
             err_era = 0
             for i in range(self.goal.shape[1]):
                 y_i = np.expand_dims(self.goal[:, i], axis=1)
@@ -66,3 +69,6 @@ class GradientDecent:
         print(self.goal.shape[1])
 
         return acc / self.goal.shape[1]
+
+    def relu_deriv(self, layer):
+        return layer > 0

@@ -12,10 +12,12 @@ def make_goal_to_0_1(neurons, goal):
     for i in range(goal.shape[1]):
         idx = return_color_index(goal[0, i])
         new_goal[idx, i] = 1
+        
 
     return new_goal
 
 def return_color_index(goal):
+    # return goal-1
     if goal == 1:
         return 0
     elif goal == 2:
@@ -27,6 +29,7 @@ def return_color_index(goal):
     return -1
 
 def return_color(goal):
+    np.argmax(goal)
     if goal[0] == 1:
         return 1
     elif goal[1] == 1:
