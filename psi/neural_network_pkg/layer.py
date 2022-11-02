@@ -1,38 +1,37 @@
 import numpy as np
-import random
-import copy
-from neural_network_pkg.neuron import deep_neural_network
 
 class Layer:
-    wages = None
-    X = None
-    Y = None
 
-    def __init__(self, x=None, y=None, w=None, file_name="") -> None:
+    def __init__(self, x=None, y=None, file_name="") -> None:
         if file_name != "":
             self.load_weights(file_name)
 
-        X = x
-        Y = y
-        wages = w
+        self.X = x
+        self.Y = y
+        self.W = []
+        self.activation_function = []
 
-    def create_weights(self, row, col):
-        self.wages = np.random.uniform(-1, 1, size=(row, col))
-
-    def add_layer(self, n, weight_min_value=0, weight_max_value=1):
+    def add_layer(self, n, weight_min_value=-1, weight_max_value=1, activation_function=None):
         if weight_max_value < weight_min_value:
             temp = weight_max_value
             weight_max_value = weight_min_value
             weight_min_value = temp
 
-        for _ in range(n):
-            neurons = random.randint(2, 7) # random rows for the next hidden layer or output
-            w = self.wages[-1].shape[0] # last layer neurons
+        self.add_activation_function(activation_function)
 
-            new_wage = np.random.uniform(weight_min_value, 
-                            weight_max_value, 
-                            size=(neurons, w))
-            self.add_new_wage(new_wage)
+        if len(self.W) == 0:
+            if self.X is not None:
+                col = self.X.shape[0]
+            else:
+                raise Exception("X is None")
+        else:
+            col = self.W[-1].shape[0]
+
+        new_wage = np.random.uniform(
+                        weight_min_value, 
+                        weight_max_value, 
+                        size=(n, col))
+        self.add_new_wage(new_wage)
 
 
     def load_weights(self, file_name):
@@ -51,14 +50,23 @@ class Layer:
 
         self.add_new_wage(wage)
 
-    
-    def add_new_wage(self, new_wage):
-        if self.wages is None:
-            self.wages = [new_wage]
-            return
-        else:   
-            self.wages.append(new_wage)
+    def save_weights(self, file_name):
+        with open(file_name, "w") as f:
+            for wage in self.W:
+                for row in wage:
+                    for col in row:
+                        f.write(f"{col},")
+                    f.write("\n")
+                f.write("\n")
 
+    def set_W(self, W):
+        self.W = W
+
+    def add_new_wage(self, new_wage):
+        self.W.append(new_wage)
+
+    def add_activation_function(self, activation_function):
+        self.activation_function.append(activation_function)
 
     def load_input_and_goal(self, filename):
         with open(filename, "r") as f:
