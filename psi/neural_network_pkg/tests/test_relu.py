@@ -2,7 +2,7 @@ from neural_network_pkg.gradient_decent import GradientDecent
 from neural_network_pkg.layer import Layer
 import numpy as np
 
-def test_relu() -> None:
+def test_ReLU() -> None:
     gd = GradientDecent()
 
     layer_1 = np.array([
@@ -32,7 +32,7 @@ def test_relu() -> None:
     assert (gd.relu_deriv(layer_1) == expected_layer_1).all()
     assert (gd.relu_deriv(layer_2) == expected_layer_2).all()
 
-def zad_1() -> None:
+def test_zad_1() -> None:
     X = np.array([
         [0.5, 0.1, 0.2, 0.8],
         [0.75, 0.3, 0.1, 0.9],
@@ -65,4 +65,4 @@ def zad_1() -> None:
     gd = GradientDecent(alpha, X, Y, W)
     gd.train(1)
 
-    print(gd.prediction)
+    assert (gd.prediction == np.array([[0.376], [0.3765], [0.305]])).all()

@@ -22,6 +22,11 @@ class GradientDecent:
             err_era = 0
             for i in range(self.goal.shape[1]):
                 y_i = np.expand_dims(self.goal[:, i], axis=1)
+                x_i = np.expand_dims(self.x[:, i], axis=1)
+
+                for w_i in self.w:
+                    self.predict(w_i, x_i, func)
+                
                 
                 d = self.delta(self.x[:, i], y_i)
                 err_era += self.error(y_i)
@@ -30,8 +35,11 @@ class GradientDecent:
 
             self.err = err_era
 
-    def predict(self, x_i, bias=0):
-        self.prediction = neural_network(x_i, self.w, bias)  
+    def predict(self, w_i, x_i, bias=0, func=None):
+        self.prediction = neural_network(x_i, w_i, bias)  
+
+        if func is not None:
+            self.prediction = func(self.prediction)
 
     def find_max(self, col):
         pred = np.argmax(self.prediction)
@@ -40,8 +48,7 @@ class GradientDecent:
         self.all_prediction[:, col] = 0
         self.all_prediction[pred, col] = 1
 
-    def delta(self, x_i, y_i, bias=0):
-        self.predict(x_i, bias)
+    def delta(self, x_i, y_i):
         return 2/self.n * np.outer(self.prediction - y_i, x_i)
 
     def error(self, y_i):
