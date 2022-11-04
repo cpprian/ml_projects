@@ -12,58 +12,59 @@ def make_goal_to_0_1(neurons, goal):
     for i in range(goal.shape[1]):
         idx = return_color_index(goal[0, i])
         new_goal[idx, i] = 1
-        
-
+    
     return new_goal
 
 def return_color_index(goal):
-    # return goal-1
-    if goal == 1:
-        return 0
-    elif goal == 2:
-        return 1
-    elif goal == 3:
-        return 2
-    elif goal == 4:
-        return 3
-    return -1
+    return (goal-1).astype(int)
 
 def return_color(goal):
-    np.argmax(goal)
-    if goal[0] == 1:
-        return 1
-    elif goal[1] == 1:
-        return 2
-    elif goal[2] == 1:
-        return 3
-    elif goal[3] == 1:
-        return 4
-    return -1
-
+    return np.argmax(goal).astype(int) + 1
 
 if __name__ == '__main__':
-    alpha = 0.002
-    neurons = 4
+    alpha = 0.01
+    n_hidden = 11
+    n_out = 4
 
     layer = Layer()
-    layer.load_input_and_goal("psi/static/color_training.txt")
+    layer.load_input_and_goal("psi/static/color/color_training.txt")
     layer.transpose_input()
     layer.transpose_goal()
-    layer.Y = make_goal_to_0_1(neurons, layer.Y)
+    layer.Y = make_goal_to_0_1(n_out, layer.Y)
 
-    # generate weights (neurons x X.shape[1]) 
-    layer.create_weights(neurons, layer.X.shape[0])
+    # generate hidden layer
+    layer.add_layer(n_hidden, activation_function="relu")
 
-    # learn neural network
-    gd = GradientDecent(alpha, layer.X, layer.Y, layer.wages)
-    gd.train(1000)
+    # generate output layer
+    layer.add_layer(n_out, activation_function="relu")
 
     # load color_test.txt and predict the color
     test_layer = Layer()
-    test_layer.load_input_and_goal("psi/static/color_test.txt")
+    test_layer.load_input_and_goal("psi/static/color/color_test.txt")
     test_layer.transpose_input()
     test_layer.transpose_goal()
-    test_layer.Y = make_goal_to_0_1(neurons, test_layer.Y)
+    test_layer.Y = make_goal_to_0_1(n_out, test_layer.Y)
 
-    gd2 = GradientDecent(alpha, test_layer.X, test_layer.Y, gd.w)
-    print(gd2.accuracy())
+    # learn neural network
+    gd = GradientDecent(alpha, layer.X, layer.Y, layer.W[0], layer.W[1])
+    gd.insert_activation_function(gd.relu_deriv, 0)
+    gd.insert_activation_function(gd.relu_deriv, 1)
+
+    result = 0
+    while True:
+        gd.fit(1)
+        gd2 = GradientDecent(alpha, test_layer.X, test_layer.Y, gd.Wh, gd.Wy)
+        temp = gd2.accuracy()
+        if temp > result:
+            result = temp
+        else:
+            if temp > 0.9:
+                break
+            else:
+                layer.set_W([])
+                layer.add_layer(n_hidden, activation_function="relu")
+                layer.add_layer(n_out, activation_function="relu")
+
+                gd = GradientDecent(alpha, layer.X, layer.Y, layer.W[0], layer.W[1])
+
+    layer.save_weights("psi/static/color/weights_color.txt")
