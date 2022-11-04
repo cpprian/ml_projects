@@ -27,7 +27,7 @@ if __name__ == '__main__':
     n_out = 4
 
     layer = Layer()
-    layer.load_input_and_goal("psi/static/color_training.txt")
+    layer.load_input_and_goal("psi/static/color/color_training.txt")
     layer.transpose_input()
     layer.transpose_goal()
     layer.Y = make_goal_to_0_1(n_out, layer.Y)
@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     # load color_test.txt and predict the color
     test_layer = Layer()
-    test_layer.load_input_and_goal("psi/static/color_test.txt")
+    test_layer.load_input_and_goal("psi/static/color/color_test.txt")
     test_layer.transpose_input()
     test_layer.transpose_goal()
     test_layer.Y = make_goal_to_0_1(n_out, test_layer.Y)
@@ -67,4 +67,4 @@ if __name__ == '__main__':
 
                 gd = GradientDecent(alpha, layer.X, layer.Y, layer.W[0], layer.W[1])
 
-    layer.save_weights("psi/static/weights_color.txt")
+    layer.save_weights("psi/static/color/weights_color.txt")

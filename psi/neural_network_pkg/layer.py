@@ -51,6 +51,8 @@ class Layer:
         self.add_new_wage(wage)
 
     def save_weights(self, file_name):
+        print("Saving weights to file: " + file_name)
+        print(self.W)
         with open(file_name, "w") as f:
             for wage in self.W:
                 for row in wage:
@@ -60,7 +62,9 @@ class Layer:
                 f.write("\n")
 
     def set_W(self, W):
+        print(W)
         self.W = W
+        print(self.W)
 
     def add_new_wage(self, new_wage):
         self.W.append(new_wage)

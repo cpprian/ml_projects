@@ -100,4 +100,26 @@ def test_zad_3() -> None:
     n_layer_hidden = 40
     n_layer_output = 10
 
-    layer = Layer()
+
+    # read bytes from file
+    with open('psi/static/MNIST_ORG/train-images.idx3-ubyte', 'rb') as f:
+        image = f.read()
+
+        # convert bytes to a numpy array
+        image = np.frombuffer(image, dtype=np.uint8, offset=16) 
+        image = image.reshape(60000, 784)
+
+    with open('psi/static/MNIST_ORG/train-labels.idx1-ubyte', 'rb') as f:
+        label = f.read()
+
+        # convert bytes to a numpy array
+        label = np.frombuffer(label, dtype=np.uint8, offset=8) 
+        label = label.reshape(60000, 1)
+
+    layer_label = Layer()
+    layer_label.set_W([label])
+    layer_label.save_weights('psi/static/MNIST_ORG/label_weights.txt')
+
+    layer_input = Layer()
+    layer_input.set_W([image])
+    layer_input.save_weights('psi/static/MNIST_ORG/input_weights.txt')
