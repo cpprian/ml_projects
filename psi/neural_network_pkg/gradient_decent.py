@@ -30,33 +30,6 @@ class GradientDecent:
         self.activation_function.append(None)
         self.activation_function.append(None)
 
-    # def fit(self, time):
-    #     for _ in range(time):
-    #         err_era = 0
-    #         for i in range(self.goal.shape[1]):
-    #             y_i = np.expand_dims(self.goal[:, i], axis=1)
-    #             x_i = np.expand_dims(self.x[:, i], axis=1)
-
-    #             self.prediction_hidden = self.predict(self.Wh, x_i, func=self.activation_function[0])
-    #             dropout = np.random.randint(2, size=self.prediction_hidden.shape)
-    #             self.prediction_hidden *= dropout * 2
-
-    #             self.prediction_output = self.predict(self.Wy, self.prediction_hidden, func=self.activation_function[1])
-    #             self.all_prediction_output[:, i] = self.prediction_output[:, 0]
-
-    #             self.delta_output = self.delta(self.prediction_output, y_i)
-    #             h = self.Wy.T.dot(self.delta_output)
-    #             self.delta_hidden = h * self.relu_deriv(self.prediction_hidden)
-    #             self.delta_hidden *= dropout
-
-    #             self.Wh -= self.alpha * (self.delta_hidden @ x_i.T)
-    #             self.Wy -= self.alpha * (self.delta_output @ self.prediction_hidden.T)
-
-    #             err_era += self.error(y_i)
-    #             self.find_max(i)
-
-    #         self.err = err_era
-
     def fit(self, time):
         for _ in range(time):
             self.prediction_hidden = self.predict(self.Wh, self.x, func=self.activation_function[0])
@@ -117,3 +90,19 @@ class GradientDecent:
 
     def relu_deriv(self, layer):
         return np.greater(layer, 0).astype(int)
+
+    def sigmoid(self, layer):
+        return 1 / (1 + np.exp(-layer))
+
+    def sigmoid_deriv(self, layer):
+        return layer * (1 - layer)
+
+    def tanh(self, layer):
+        return np.tanh(layer)
+
+    def tanh_deriv(self, layer):
+        return 1 - np.square(layer)
+
+    def softmax(self, layer):
+        exp = np.exp(layer)
+        return exp / np.sum(exp)
