@@ -46,14 +46,14 @@ if __name__ == '__main__':
     test_layer.Y = make_goal_to_0_1(n_out, test_layer.Y)
 
     # learn neural network
-    gd = GradientDecent(alpha, layer.X, layer.Y, layer.W[0], layer.W[1])
+    gd = GradientDecent(alpha, layer.X, layer.Y, layer.W[0], layer.W[1], 20)
     gd.insert_activation_function(gd.relu_deriv, 0)
     gd.insert_activation_function(gd.relu_deriv, 1)
 
     result = 0
     while True:
         gd.fit(100)
-        gd2 = GradientDecent(alpha, test_layer.X, test_layer.Y, gd.Wh, gd.Wy)
+        gd2 = GradientDecent(alpha, test_layer.X, test_layer.Y, gd.Wh, gd.Wy, 20)
         temp = gd2.accuracy()
         if temp > result:
             result = temp
@@ -65,4 +65,4 @@ if __name__ == '__main__':
                 layer.add_layer(n_hidden, activation_function="relu")
                 layer.add_layer(n_out, activation_function="relu")
 
-                gd = GradientDecent(alpha, layer.X, layer.Y, layer.W[0], layer.W[1])
+                gd = GradientDecent(alpha, layer.X, layer.Y, layer.W[0], layer.W[1], 20)

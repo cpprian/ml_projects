@@ -4,7 +4,7 @@ from neural_network_pkg.neuron import neural_network
 
 class GradientDecent:
 
-    def __init__(self, alpha, x, goal, wh, wy):
+    def __init__(self, alpha, x, goal, wh, wy, batch_size):
         self.alpha = alpha
         self.x = x
         self.goal = goal
@@ -12,6 +12,7 @@ class GradientDecent:
         self.Wy = wy
         self.err = 0
         self.n = self.goal.shape[0]
+        self.batch_size = batch_size
 
         self.prediction_hidden = None
         self.prediction_output = None
@@ -29,32 +30,44 @@ class GradientDecent:
         self.activation_function.append(None)
         self.activation_function.append(None)
 
+    # def fit(self, time):
+    #     for _ in range(time):
+    #         err_era = 0
+    #         for i in range(self.goal.shape[1]):
+    #             y_i = np.expand_dims(self.goal[:, i], axis=1)
+    #             x_i = np.expand_dims(self.x[:, i], axis=1)
+
+    #             self.prediction_hidden = self.predict(self.Wh, x_i, func=self.activation_function[0])
+    #             dropout = np.random.randint(2, size=self.prediction_hidden.shape)
+    #             self.prediction_hidden *= dropout * 2
+
+    #             self.prediction_output = self.predict(self.Wy, self.prediction_hidden, func=self.activation_function[1])
+    #             self.all_prediction_output[:, i] = self.prediction_output[:, 0]
+
+    #             self.delta_output = self.delta(self.prediction_output, y_i)
+    #             h = self.Wy.T.dot(self.delta_output)
+    #             self.delta_hidden = h * self.relu_deriv(self.prediction_hidden)
+    #             self.delta_hidden *= dropout
+
+    #             self.Wh -= self.alpha * (self.delta_hidden @ x_i.T)
+    #             self.Wy -= self.alpha * (self.delta_output @ self.prediction_hidden.T)
+
+    #             err_era += self.error(y_i)
+    #             self.find_max(i)
+
+    #         self.err = err_era
+
     def fit(self, time):
         for _ in range(time):
-            err_era = 0
-            for i in range(self.goal.shape[1]):
-                y_i = np.expand_dims(self.goal[:, i], axis=1)
-                x_i = np.expand_dims(self.x[:, i], axis=1)
+            self.prediction_hidden = self.predict(self.Wh, self.x, func=self.activation_function[0])
+            self.prediction_output = self.predict(self.Wy, self.prediction_hidden, func=self.activation_function[1])
 
-                self.prediction_hidden = self.predict(self.Wh, x_i, func=self.activation_function[0])
-                dropout = np.random.randint(2, size=self.prediction_hidden.shape)
-                self.prediction_hidden *= dropout * 2
+            self.delta_output = self.delta(self.prediction_output, self.goal) / self.batch_size
+            self.delta_hidden = self.Wy.T.dot(self.delta_output)
+            self.delta_hidden *= self.relu_deriv(self.prediction_hidden)
 
-                self.prediction_output = self.predict(self.Wy, self.prediction_hidden, func=self.activation_function[1])
-                self.all_prediction_output[:, i] = self.prediction_output[:, 0]
-
-                self.delta_output = self.delta(self.prediction_output, y_i)
-                h = self.Wy.T.dot(self.delta_output)
-                self.delta_hidden = h * self.relu_deriv(self.prediction_hidden)
-                self.delta_hidden *= dropout
-
-                self.Wh -= self.alpha * (self.delta_hidden @ x_i.T)
-                self.Wy -= self.alpha * (self.delta_output @ self.prediction_hidden.T)
-
-                err_era += self.error(y_i)
-                self.find_max(i)
-
-            self.err = err_era
+            self.Wh -= self.alpha * (self.delta_hidden @ self.x.T)
+            self.Wy -= self.alpha * (self.delta_output @ self.prediction_hidden.T)
 
     def predict(self, w_i, x_i, bias=0, func=None):
         pred = neural_network(x_i, w_i, bias)  
