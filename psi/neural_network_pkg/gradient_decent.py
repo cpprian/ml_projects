@@ -30,19 +30,24 @@ class GradientDecent:
 
     def fit(self, time):
         for _ in range(time):
-            self.prediction_hidden = self.predict(self.Wh, self.x, func=self.activation_function[0])
-            dropout = np.random.randint(2, size=self.prediction_hidden.shape)
-            self.prediction_hidden *= dropout * 2
+            for i in range(int(self.x.shape[1] / self.batch_size)):
+                batch_start, batch_end = i * self.batch_size, (i + 1) * self.batch_size
+                x_i = self.x[:, batch_start:batch_end]
+                y_i = self.goal[:, batch_start:batch_end]
 
-            self.prediction_output = self.predict(self.Wy, self.prediction_hidden, func=self.activation_function[1])
+                self.prediction_hidden = self.predict(self.Wh, x_i, func=self.activation_function[0])
+                dropout = np.random.randint(2, size=self.prediction_hidden.shape)
+                self.prediction_hidden *= dropout * 2
 
-            self.delta_output = self.delta(self.prediction_output, self.goal) / self.batch_size
-            self.delta_hidden = self.Wy.T.dot(self.delta_output)
-            self.delta_hidden *= self.relu_deriv(self.prediction_hidden)
-            self.delta_hidden *= dropout
+                self.prediction_output = self.predict(self.Wy, self.prediction_hidden, func=self.activation_function[1])
 
-            self.Wh -= self.alpha * (self.delta_hidden @ self.x.T)
-            self.Wy -= self.alpha * (self.delta_output @ self.prediction_hidden.T)
+                self.delta_output = self.delta(self.prediction_output, y_i) / self.batch_size
+                self.delta_hidden = self.Wy.T.dot(self.delta_output)
+                self.delta_hidden *= self.relu_deriv(self.prediction_hidden)
+                self.delta_hidden *= dropout
+
+                self.Wh -= self.alpha * (self.delta_hidden @ x_i.T)
+                self.Wy -= self.alpha * (self.delta_output @ self.prediction_hidden.T)
 
     def predict(self, w_i, x_i, bias=0, func=None):
         pred = neural_network(x_i, w_i, bias)  
@@ -50,13 +55,6 @@ class GradientDecent:
         if func is not None:
             pred = pred * func(pred)
         return pred
-
-    def find_max(self, col):
-        pred = np.argmax(self.prediction_output)
-
-        # clean up the last prediction max
-        self.all_prediction[:, col] = 0
-        self.all_prediction[pred, col] = 1
 
     def delta(self, x_i, y_i):
         return 2/self.n * (x_i - y_i)
@@ -67,6 +65,13 @@ class GradientDecent:
             sum_prediction_goal += np.square(self.prediction_output[i, 0] - y_i[i, 0])
 
         return sum_prediction_goal / self.n
+
+    def find_max(self, col):
+        pred = np.argmax(self.prediction_output)
+
+        # clean up the last prediction max
+        self.all_prediction[:, col] = 0
+        self.all_prediction[pred, col] = 1
 
 
     def test_prediction(self, x_i, func=None):
