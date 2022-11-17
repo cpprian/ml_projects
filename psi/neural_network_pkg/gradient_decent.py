@@ -37,12 +37,16 @@ class GradientDecent:
                 x_i = np.expand_dims(self.x[:, i], axis=1)
 
                 self.prediction_hidden = self.predict(self.Wh, x_i, func=self.activation_function[0])
+                dropout = np.random.randint(2, size=self.prediction_hidden.shape)
+                self.prediction_hidden *= dropout * 2
+
                 self.prediction_output = self.predict(self.Wy, self.prediction_hidden, func=self.activation_function[1])
                 self.all_prediction_output[:, i] = self.prediction_output[:, 0]
 
                 self.delta_output = self.delta(self.prediction_output, y_i)
                 h = self.Wy.T.dot(self.delta_output)
                 self.delta_hidden = h * self.relu_deriv(self.prediction_hidden)
+                self.delta_hidden *= dropout
 
                 self.Wh -= self.alpha * (self.delta_hidden @ x_i.T)
                 self.Wy -= self.alpha * (self.delta_output @ self.prediction_hidden.T)

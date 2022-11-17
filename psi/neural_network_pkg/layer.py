@@ -33,38 +33,11 @@ class Layer:
                         size=(n, col))
         self.add_new_wage(new_wage)
 
-
     def load_weights(self, file_name):
-        wage = None
-        with open(file_name, "r") as f:
-            lines = f.readlines()
-
-            for line in lines:
-                row = np.fromstring(line, dtype=float, sep=",\n")
-
-                if wage is None:
-                    wage = row
-                    continue
-
-                wage = np.vstack((wage, row)) 
-
-        self.add_new_wage(wage)
+        pass
 
     def save_weights(self, file_name):
-        print("Saving weights to file: " + file_name)
-        print(self.W)
-        with open(file_name, "w") as f:
-            for wage in self.W:
-                for row in wage:
-                    for col in row:
-                        f.write(f"{col},")
-                    f.write("\n")
-                f.write("\n")
-
-    def set_W(self, W):
-        print(W)
-        self.W = W
-        print(self.W)
+        pass
 
     def add_new_wage(self, new_wage):
         self.W.append(new_wage)
@@ -98,3 +71,9 @@ class Layer:
 
     def transpose_goal(self):
         self.Y = self.Y.T
+
+    def load_input(self, filename):
+        pass
+
+    def load_goal(self, filename):
+        pass

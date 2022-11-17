@@ -52,7 +52,7 @@ if __name__ == '__main__':
 
     result = 0
     while True:
-        gd.fit(1)
+        gd.fit(100)
         gd2 = GradientDecent(alpha, test_layer.X, test_layer.Y, gd.Wh, gd.Wy)
         temp = gd2.accuracy()
         if temp > result:
@@ -61,10 +61,8 @@ if __name__ == '__main__':
             if temp > 0.9:
                 break
             else:
-                layer.set_W([])
+                layer.W = []
                 layer.add_layer(n_hidden, activation_function="relu")
                 layer.add_layer(n_out, activation_function="relu")
 
                 gd = GradientDecent(alpha, layer.X, layer.Y, layer.W[0], layer.W[1])
-
-    layer.save_weights("psi/static/color/weights_color.txt")
