@@ -40,7 +40,7 @@ if __name__ == '__main__':
     gd.insert_activation_function(gd.softmax, 1)
 
     print("Start training")   
-    gd.fit(1)
+    gd.fit(10)
 
     print("Start testing")
     gd2 = GradientDecent(alpha, test_layer.X, test_layer.Y, test_layer.W[0], test_layer.W[1], batch_size_test)

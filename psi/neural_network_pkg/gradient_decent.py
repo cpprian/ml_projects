@@ -26,12 +26,12 @@ class GradientDecent:
         self.activation_function = []
 
     def fit(self, time):
-        for _ in range(time):
+        for j in range(time):
             for i in range(int(self.x.shape[1] / self.batch_size)):
                 batch_start, batch_end = i * self.batch_size, (i + 1) * self.batch_size
                 x_i = self.x[:, batch_start:batch_end]
                 y_i = self.goal[:, batch_start:batch_end]
-
+                
                 self.prediction_hidden = self.predict(self.Wh, x_i, func=self.activation_function[0])
                 dropout = np.random.randint(2, size=self.prediction_hidden.shape)
                 self.prediction_hidden *= dropout * 2
@@ -40,7 +40,7 @@ class GradientDecent:
 
                 self.delta_output = self.delta(self.prediction_output, y_i) / self.batch_size
                 self.delta_hidden = self.Wy.T.dot(self.delta_output)
-                self.delta_hidden *= self.relu_deriv(self.prediction_hidden)
+                self.delta_hidden *= self.activation_function[0](self.prediction_hidden)
                 self.delta_hidden *= dropout
 
                 self.Wh -= self.alpha * (self.delta_hidden @ x_i.T)
@@ -54,7 +54,7 @@ class GradientDecent:
         return pred
 
     def delta(self, x_i, y_i):
-        return 2/self.n * (x_i - y_i)
+        return 2/self.n * (x_i - y_i) 
 
     def error(self, y_i):
         sum_prediction_goal = 0
@@ -64,25 +64,19 @@ class GradientDecent:
         return sum_prediction_goal / self.n
 
     def find_max(self, col):
-        pred = np.argmax(self.prediction_output)
+        pred = np.argmax(self.prediction_output[:, col])
 
         # clean up the last prediction max
         self.all_prediction[:, col] = 0
         self.all_prediction[pred, col] = 1
 
-
-    def test_prediction(self, x_i, func=None):
-        for i in range(self.goal.shape[1]):
-            self.prediction_hidden = self.predict(self.Wh, x_i, func=func)
-            self.prediction_output = self.predict(self.Wy, self.prediction_hidden, func=func)
-            self.find_max(i)
-
     def accuracy(self, f_log):
         acc = 0
+        self.prediction_hidden = self.predict(self.Wh, self.x)
+        self.prediction_output = self.predict(self.Wy, self.prediction_hidden)
+        
         for i in range(self.goal.shape[1]):
-            x_i = np.expand_dims(self.x[:, i], axis=1)
-            self.test_prediction(x_i)
-
+            self.find_max(i)
             if np.array_equal(self.all_prediction[:, i], self.goal[:, i]):
                 acc += 1
 

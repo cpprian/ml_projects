@@ -101,12 +101,12 @@ class Layer:
 
             first_image = np.frombuffer(f.read(row*col), dtype=np.uint8)
 
-            self.X = np.zeros((n, row*col))
-            self.X[0, :] = first_image
+            self.X = np.zeros((row*col, n))
+            self.X[:, 0] = first_image
 
             i = 1
             while (byte := f.read(row * col)):
-                self.X[i, :] = np.frombuffer(byte, dtype=np.uint8)
+                self.X[:, i] = np.frombuffer(byte, dtype=np.uint8)
                 i += 1
 
 

@@ -59,6 +59,7 @@ if __name__ == '__main__':
             result = temp
         else:
             if temp > 0.9:
+                print("result: ", result)
                 break
             else:
                 layer.W = []
