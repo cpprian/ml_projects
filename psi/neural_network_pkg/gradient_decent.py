@@ -20,9 +20,6 @@ class GradientDecent:
         self.delta_hidden = None
         self.delta_output = None
 
-        # for saving all prediction from one epoch
-        self.all_prediction_output = np.zeros(self.goal.shape)
-
         # for test accuracy
         self.all_prediction = np.zeros(self.goal.shape)
 
@@ -80,7 +77,7 @@ class GradientDecent:
             self.prediction_output = self.predict(self.Wy, self.prediction_hidden, func=func)
             self.find_max(i)
 
-    def accuracy(self):
+    def accuracy(self, f_log):
         acc = 0
         for i in range(self.goal.shape[1]):
             x_i = np.expand_dims(self.x[:, i], axis=1)
@@ -89,7 +86,9 @@ class GradientDecent:
             if np.array_equal(self.all_prediction[:, i], self.goal[:, i]):
                 acc += 1
 
-        print(f"Accuracy: {acc/self.goal.shape[1]}      Acc: {acc}  Goal: {self.goal.shape[1]}")
+        with open(f_log, 'a') as f:
+            f.write(f"Accuracy: {acc/self.goal.shape[1]}      Acc: {acc}  Goal: {self.goal.shape[1]}\n")
+
         return acc / self.goal.shape[1]
 
     def insert_activation_function(self, func, idx):

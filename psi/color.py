@@ -54,7 +54,7 @@ if __name__ == '__main__':
     while True:
         gd.fit(350)
         gd2 = GradientDecent(alpha, test_layer.X, test_layer.Y, gd.Wh, gd.Wy, 20)
-        temp = gd2.accuracy()
+        temp = gd2.accuracy('psi/static/color/color_log_3.txt')
         if temp > result:
             result = temp
         else:
