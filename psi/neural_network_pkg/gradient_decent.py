@@ -27,17 +27,19 @@ class GradientDecent:
         self.all_prediction = np.zeros(self.goal.shape)
 
         self.activation_function = []
-        self.activation_function.append(None)
-        self.activation_function.append(None)
 
     def fit(self, time):
         for _ in range(time):
             self.prediction_hidden = self.predict(self.Wh, self.x, func=self.activation_function[0])
+            dropout = np.random.randint(2, size=self.prediction_hidden.shape)
+            self.prediction_hidden *= dropout * 2
+
             self.prediction_output = self.predict(self.Wy, self.prediction_hidden, func=self.activation_function[1])
 
             self.delta_output = self.delta(self.prediction_output, self.goal) / self.batch_size
             self.delta_hidden = self.Wy.T.dot(self.delta_output)
             self.delta_hidden *= self.relu_deriv(self.prediction_hidden)
+            self.delta_hidden *= dropout
 
             self.Wh -= self.alpha * (self.delta_hidden @ self.x.T)
             self.Wy -= self.alpha * (self.delta_output @ self.prediction_hidden.T)

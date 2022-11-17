@@ -22,7 +22,7 @@ def return_color(goal):
     return np.argmax(goal).astype(int) + 1
 
 if __name__ == '__main__':
-    alpha = 0.01
+    alpha = 0.1
     n_hidden = 11
     n_out = 4
 
@@ -66,3 +66,5 @@ if __name__ == '__main__':
                 layer.add_layer(n_out, activation_function="relu")
 
                 gd = GradientDecent(alpha, layer.X, layer.Y, layer.W[0], layer.W[1], 20)
+                gd.insert_activation_function(gd.relu_deriv, 0)
+                gd.insert_activation_function(gd.relu_deriv, 1)
