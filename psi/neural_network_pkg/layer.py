@@ -33,38 +33,31 @@ class Layer:
                         size=(n, col))
         self.add_new_wage(new_wage)
 
-
     def load_weights(self, file_name):
-        wage = None
-        with open(file_name, "r") as f:
-            lines = f.readlines()
+        with open(file_name, "rb") as f:
+            _ = f.read(4)
+            n = int.from_bytes(f.read(4), byteorder="big")
+            dim = []
 
-            for line in lines:
-                row = np.fromstring(line, dtype=float, sep=",\n")
+            for _ in range(n):
+                row = int.from_bytes(f.read(4), byteorder="big")
+                col = int.from_bytes(f.read(4), byteorder="big")
+                dim.append((row, col))
 
-                if wage is None:
-                    wage = row
-                    continue
-
-                wage = np.vstack((wage, row)) 
-
-        self.add_new_wage(wage)
+            for i in range(n):
+                self.add_new_wage(np.frombuffer(f.read(dim[i][0]*dim[i][1]), dtype=np.float64))
 
     def save_weights(self, file_name):
-        print("Saving weights to file: " + file_name)
-        print(self.W)
         with open(file_name, "w") as f:
-            for wage in self.W:
-                for row in wage:
-                    for col in row:
-                        f.write(f"{col},")
-                    f.write("\n")
-                f.write("\n")
+            f.write(int(2004).to_bytes(4, byteorder="big"))
+            f.write(len(self.W).to_bytes(4, byteorder="big"))
 
-    def set_W(self, W):
-        print(W)
-        self.W = W
-        print(self.W)
+            for w in self.W:
+                f.write(w.shape[0].to_bytes(4, byteorder="big"))
+                f.write(w.shape[1].to_bytes(4, byteorder="big"))
+
+            for w in self.W:
+                f.write(w.tobytes())
 
     def add_new_wage(self, new_wage):
         self.W.append(new_wage)
@@ -98,3 +91,34 @@ class Layer:
 
     def transpose_goal(self):
         self.Y = self.Y.T
+
+    def load_input(self, filename):
+        with open(filename, "rb") as f:
+            _ = f.read(4)
+            n = int.from_bytes(f.read(4), byteorder="big")
+            row = int.from_bytes(f.read(4), byteorder="big")
+            col = int.from_bytes(f.read(4), byteorder="big")
+
+            first_image = np.frombuffer(f.read(row*col), dtype=np.uint8)
+
+            self.X = np.zeros((row*col, n))
+            self.X[:, 0] = first_image
+
+            i = 1
+            while (byte := f.read(row * col)):
+                self.X[:, i] = np.frombuffer(byte, dtype=np.uint8)
+                i += 1
+
+
+    def load_label(self, filename):
+        with open(filename, "rb") as f:
+            _ = f.read(4)
+            n = int.from_bytes(f.read(4), byteorder="big")
+
+            self.Y = np.zeros((n, 1))
+            self.Y[0, 0] = int.from_bytes(f.read(1), byteorder="big")
+
+            i = 1
+            while (byte := f.read(1)):
+                self.Y[i, 0] = int.from_bytes(byte, byteorder="big")
+                i += 1

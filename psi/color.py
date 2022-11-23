@@ -22,7 +22,7 @@ def return_color(goal):
     return np.argmax(goal).astype(int) + 1
 
 if __name__ == '__main__':
-    alpha = 0.01
+    alpha = 0.1
     n_hidden = 11
     n_out = 4
 
@@ -46,25 +46,26 @@ if __name__ == '__main__':
     test_layer.Y = make_goal_to_0_1(n_out, test_layer.Y)
 
     # learn neural network
-    gd = GradientDecent(alpha, layer.X, layer.Y, layer.W[0], layer.W[1])
+    gd = GradientDecent(alpha, layer.X, layer.Y, layer.W[0], layer.W[1], 20)
     gd.insert_activation_function(gd.relu_deriv, 0)
     gd.insert_activation_function(gd.relu_deriv, 1)
 
     result = 0
     while True:
-        gd.fit(1)
-        gd2 = GradientDecent(alpha, test_layer.X, test_layer.Y, gd.Wh, gd.Wy)
-        temp = gd2.accuracy()
+        gd.fit(350)
+        gd2 = GradientDecent(alpha, test_layer.X, test_layer.Y, gd.Wh, gd.Wy, 20)
+        temp = gd2.accuracy('psi/static/color/color_log_3.txt')
         if temp > result:
             result = temp
         else:
             if temp > 0.9:
+                print("result: ", result)
                 break
             else:
-                layer.set_W([])
+                layer.W = []
                 layer.add_layer(n_hidden, activation_function="relu")
                 layer.add_layer(n_out, activation_function="relu")
 
-                gd = GradientDecent(alpha, layer.X, layer.Y, layer.W[0], layer.W[1])
-
-    layer.save_weights("psi/static/color/weights_color.txt")
+                gd = GradientDecent(alpha, layer.X, layer.Y, layer.W[0], layer.W[1], 20)
+                gd.insert_activation_function(gd.relu_deriv, 0)
+                gd.insert_activation_function(gd.relu_deriv, 1)

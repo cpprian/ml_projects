@@ -1,0 +1,9 @@
+Accuracy: 0.7364341085271318      Acc: 95  Goal: 129
+Accuracy: 0.627906976744186      Acc: 81  Goal: 129
+Accuracy: 0.6511627906976745      Acc: 84  Goal: 129
+Accuracy: 0.7751937984496124      Acc: 100  Goal: 129
+Accuracy: 0.7364341085271318      Acc: 95  Goal: 129
+Accuracy: 0.7364341085271318      Acc: 95  Goal: 129
+Accuracy: 0.5581395348837209      Acc: 72  Goal: 129
+Accuracy: 0.9922480620155039      Acc: 128  Goal: 129
+Accuracy: 0.9922480620155039      Acc: 128  Goal: 129

@@ -1,0 +1,17 @@
+Accuracy: 0.7286821705426356      Acc: 94  Goal: 129
+Accuracy: 0.7209302325581395      Acc: 93  Goal: 129
+Accuracy: 0.4883720930232558      Acc: 63  Goal: 129
+Accuracy: 0.5348837209302325      Acc: 69  Goal: 129
+Accuracy: 0.8604651162790697      Acc: 111  Goal: 129
+Accuracy: 0.8837209302325582      Acc: 114  Goal: 129
+Accuracy: 0.8992248062015504      Acc: 116  Goal: 129
+Accuracy: 0.9147286821705426      Acc: 118  Goal: 129
+Accuracy: 0.8372093023255814      Acc: 108  Goal: 129
+Accuracy: 0.6744186046511628      Acc: 87  Goal: 129
+Accuracy: 0.7286821705426356      Acc: 94  Goal: 129
+Accuracy: 0.7441860465116279      Acc: 96  Goal: 129
+Accuracy: 0.7441860465116279      Acc: 96  Goal: 129
+Accuracy: 0.9534883720930233      Acc: 123  Goal: 129
+Accuracy: 0.9689922480620154      Acc: 125  Goal: 129
+Accuracy: 0.9767441860465116      Acc: 126  Goal: 129
+Accuracy: 0.9534883720930233      Acc: 123  Goal: 129
