@@ -1,4 +1,3 @@
-from turtle import window_height
 import numpy as np
 from neural_network_pkg.neuron import neural_network
 

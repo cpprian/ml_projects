@@ -1,2 +1,1 @@
-Accuracy: 0.115      Acc: 1150  Goal: 10000
-Accuracy: 0.0972      Acc: 972  Goal: 10000
+
