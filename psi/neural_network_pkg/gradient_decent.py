@@ -1,9 +1,10 @@
 import numpy as np
+from datetime import datetime
 from neural_network_pkg.neuron import neural_network
 
 class GradientDecent:
 
-    def __init__(self, alpha, x, goal, wh, wy, batch_size):
+    def __init__(self, alpha, x, goal, wh=None, wy=None, batch_size=1):
         self.alpha = alpha
         self.x = x
         self.goal = goal
@@ -31,15 +32,14 @@ class GradientDecent:
                 x_i = self.x[:, batch_start:batch_end]
                 y_i = self.goal[:, batch_start:batch_end]
                 
-                self.prediction_hidden = self.predict(self.Wh, x_i, func=self.activation_function[0])
+                self.prediction_hidden = self.predict(self.Wh, x_i, func=self.tanh)
                 dropout = np.random.randint(2, size=self.prediction_hidden.shape)
                 self.prediction_hidden *= dropout * 2
 
-                self.prediction_output = self.predict(self.Wy, self.prediction_hidden, func=self.activation_function[1])
+                self.prediction_output = self.predict(self.Wy, self.prediction_hidden, func=self.softmax)
 
                 self.delta_output = self.delta(self.prediction_output, y_i) / self.batch_size
-                self.delta_hidden = self.Wy.T.dot(self.delta_output)
-                self.delta_hidden *= self.activation_function[0](self.prediction_hidden)
+                self.delta_hidden = self.Wy.T.dot(self.delta_output) 
                 self.delta_hidden *= dropout
 
                 self.Wh -= self.alpha * (self.delta_hidden @ x_i.T)
@@ -51,6 +51,11 @@ class GradientDecent:
         if func is not None:
             pred = pred * func(pred)
         return pred
+
+    def input_prediction(self, x):
+        self.prediction_hidden = self.predict(self.Wh, x, func=self.tanh)
+        self.prediction_output = self.predict(self.Wy, self.prediction_hidden, func=self.softmax)
+        return self.prediction_output
 
     def delta(self, x_i, y_i):
         return 2/self.n * (x_i - y_i) 
@@ -71,8 +76,8 @@ class GradientDecent:
 
     def accuracy(self, f_log):
         acc = 0
-        self.prediction_hidden = self.predict(self.Wh, self.x)
-        self.prediction_output = self.predict(self.Wy, self.prediction_hidden)
+        self.prediction_hidden = self.predict(self.Wh, self.x, func=self.tanh)
+        self.prediction_output = self.predict(self.Wy, self.prediction_hidden, func=self.softmax)
         
         for i in range(self.goal.shape[1]):
             self.find_max(i)
@@ -80,7 +85,7 @@ class GradientDecent:
                 acc += 1
 
         with open(f_log, 'a') as f:
-            f.write(f"Accuracy: {acc/self.goal.shape[1]}      Acc: {acc}  Goal: {self.goal.shape[1]}\n")
+            f.write(f"Accuracy: {acc/self.goal.shape[1]}  {datetime.today().strftime('%D-%M-%Y %H:%M:%S')}     Acc: {acc}  Goal: {self.goal.shape[1]}\n")
 
         return acc / self.goal.shape[1]
 
@@ -96,12 +101,12 @@ class GradientDecent:
     def sigmoid_deriv(self, layer):
         return layer * (1 - layer)
 
-    def tanh(self, layer):
-        return np.tanh(layer)
+    def tanh(self, x):
+        return (np.exp(x) - np.exp(-x))/(np.exp(x) + np.exp(-x))
 
     def tanh_deriv(self, layer):
         return 1 - np.square(layer)
 
-    def softmax(self, layer):
-        exp = np.exp(layer)
+    def softmax(self, x):
+        exp = np.exp(x)
         return exp / np.sum(exp)
