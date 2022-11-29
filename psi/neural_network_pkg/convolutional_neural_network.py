@@ -23,7 +23,15 @@ class ConvolutionalNeuralNetwork:
                 idx += 1
 
         return output.reshape(h_kernel, w_kernel)
-                    
+
+    def make_filter(self, n, weight_min_value=-1, weight_max_value=1):
+        if weight_max_value < weight_min_value:
+            temp = weight_max_value
+            weight_max_value = weight_min_value
+            weight_min_value = temp
+
+        return np.random.uniform(weight_min_value, weight_max_value, size=(n, 9))
+ 
     def convolve(self, image, conv_filter, stride=1, padding=0):
         h_filter, w_filter = conv_filter.shape
         h_image, w_image = image.shape
@@ -59,4 +67,46 @@ class ConvolutionalNeuralNetwork:
 
     def relu_deriv(self, layer):
         return layer * (layer > 0)
+
+    def load_input(self, filename):
+        with open(filename, "rb") as f:
+            _ = f.read(4)
+            n = int.from_bytes(f.read(4), byteorder='big')
+            if n > 5000:
+                n = 5000
+
+            row = int.from_bytes(f.read(4), byteorder='big')
+            col = int.from_bytes(f.read(4), byteorder='big')
+
+            filter_h = []
+
+            i = 0
+            while (byte := f.read(row * col)):
+                if i == n:
+                    break
+
+                self.filter.append(np.array(byte).reshape(row, col))
+                i += 1
+
+        return filter_h
+
+    def load_label(self, filename):
+        with open(filename, "rb") as f:
+            _ = f.read(4)
+            n = int.from_bytes(f.read(4), byteorder='big')
+            if n > 5000:
+                n = 5000
+
+            label = np.zeros((n, 1))
+
+            i = 0
+            while (byte := f.read(1)):
+                if i == n:
+                    break
+
+                self.label[i, 0] = int.from_bytes(byte, byteorder='big')
+                i += 1
+
+        return label
+
 

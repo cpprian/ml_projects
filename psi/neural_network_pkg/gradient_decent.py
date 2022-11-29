@@ -32,11 +32,11 @@ class GradientDecent:
                 x_i = self.x[:, batch_start:batch_end]
                 y_i = self.goal[:, batch_start:batch_end]
                 
-                self.prediction_hidden = self.predict(self.Wh, x_i, func=self.tanh)
+                self.prediction_hidden = self.predict(self.Wh, x_i, func=self.activation_function[0])
                 dropout = np.random.randint(2, size=self.prediction_hidden.shape)
                 self.prediction_hidden *= dropout * 2
 
-                self.prediction_output = self.predict(self.Wy, self.prediction_hidden, func=self.softmax)
+                self.prediction_output = self.predict(self.Wy, self.prediction_hidden, func=self.activation_function[1])
 
                 self.delta_output = self.delta(self.prediction_output, y_i) / self.batch_size
                 self.delta_hidden = self.Wy.T.dot(self.delta_output) 
@@ -53,8 +53,8 @@ class GradientDecent:
         return pred
 
     def input_prediction(self, x):
-        self.prediction_hidden = self.predict(self.Wh, x, func=self.tanh)
-        self.prediction_output = self.predict(self.Wy, self.prediction_hidden, func=self.softmax)
+        self.prediction_hidden = self.predict(self.Wh, x, func=self.activation_function[0])
+        self.prediction_output = self.predict(self.Wy, self.prediction_hidden, func=self.activation_function[1])
         return self.prediction_output
 
     def delta(self, x_i, y_i):

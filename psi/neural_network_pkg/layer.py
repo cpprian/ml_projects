@@ -86,12 +86,12 @@ class Layer:
     def transpose_goal(self):
         self.Y = self.Y.T
 
-    def load_input(self, filename):
+    def load_input(self, filename, number_of_inputs=10):
         with open(filename, "rb") as f:
             _ = f.read(4)
             n = int.from_bytes(f.read(4), byteorder="big")
-            if n > 5000:
-                n = 5000
+            if n > number_of_inputs:
+                n = number_of_inputs
 
             row = int.from_bytes(f.read(4), byteorder="big")
             col = int.from_bytes(f.read(4), byteorder="big")
@@ -103,25 +103,25 @@ class Layer:
 
             i = 1
             while (byte := f.read(row * col)):
-                if i == 5000:
+                if i == number_of_inputs:
                     break
                 self.X[:, i] = np.frombuffer(byte, dtype=np.uint8)
                 i += 1
 
 
-    def load_label(self, filename):
+    def load_label(self, filename, number_of_labels=10):
         with open(filename, "rb") as f:
             _ = f.read(4)
             n = int.from_bytes(f.read(4), byteorder="big")
-            if n > 5000:
-                n = 5000
+            if n > number_of_labels:
+                n = number_of_labels
 
             self.Y = np.zeros((n, 1))
             self.Y[0, 0] = int.from_bytes(f.read(1), byteorder="big")
 
             i = 1
             while (byte := f.read(1)):
-                if i == 5000:
+                if i == number_of_labels:
                     break
 
                 self.Y[i, 0] = int.from_bytes(byte, byteorder="big")
