@@ -1,6 +1,5 @@
 import numpy as np
 from neural_network_pkg.convolutional_neural_network import ConvolutionalNeuralNetwork
-from neural_network_pkg.layer import Layer
 from neural_network_pkg.util import gen_goal
 
 if __name__ == '__main__':
@@ -9,38 +8,42 @@ if __name__ == '__main__':
     n_layer_hidden = 16
     n_layer_output = 10
     cnn = ConvolutionalNeuralNetwork()
+    cnn2 = ConvolutionalNeuralNetwork()
 
     # ================== Load data ==================
     print("Loading data...")
-    train_layer = Layer()
-    train_layer.X = cnn.load_input('psi/static/MNIST_ORG/train-images.idx3-ubyte', 1000)
-    train_layer.X = train_layer.X / 255
 
-    train_layer.load_label('psi/static/MNIST_ORG/train-labels.idx1-ubyte', 1000)
-    train_layer.transpose_goal()
+    input_images_train = cnn.load_input('psi/static/MNIST_ORG/train-images.idx3-ubyte', 5000)
+    input_images_train = input_images_train / 255
 
-    train_layer.add_new_wage(cnn.make_filter(n_layer_hidden, -0.01, 0.01))
-    train_layer.add_new_wage(cnn.make_filter(n_layer_output, -0.1, 0.1))
+    input_labels_train = cnn.load_label('psi/static/MNIST_ORG/train-labels.idx1-ubyte', 5000)
+    input_labels_train = gen_goal(n_layer_output, input_labels_train, input_images_train.shape[1])
 
-    train_layer.Y = gen_goal(n_layer_output, train_layer.Y, train_layer.X.shape[1])
+    kernel = cnn.make_filter(n_layer_hidden, 3, weight_min_value=-0.01, weight_max_value=0.01)
+    wy = cnn.make_filter(n_layer_output, n_layer_hidden, weight_min_value=-0.1, weight_max_value=0.1)
 
-    image_sections = cnn.convolve(train_layer.X, train_layer.W[0]) 
-    print(f"\n\n image sections shape: {image_sections.shape} train_layer.W[0].T shape: {train_layer.W[0].T.shape}")
-    kernel_layer = image_sections @ train_layer.W[0].T
 
-    print("50%\ done...")
-    # test_layer = Layer()
-    # test_layer.load_input('psi/static/MNIST_ORG/t10k-images.idx3-ubyte', 10000)
-    # test_layer.X = test_layer.X / 255
+    input_images_test = cnn.load_input('psi/static/MNIST_ORG/t10k-images.idx3-ubyte', 1000)
+    input_images_test = input_images_test / 255
 
-    # test_layer.load_label('psi/static/MNIST_ORG/t10k-labels.idx1-ubyte', 10000)
-    # test_layer.transpose_goal()
+    input_labels_test = cnn.load_label('psi/static/MNIST_ORG/t10k-labels.idx1-ubyte', 1000)
+    input_labels_test = gen_goal(n_layer_output, input_labels_test, input_images_test.shape[1])
 
-    # test_layer.Y = gen_goal(n_layer_output, test_layer.Y, test_layer.X.shape[1])
+    # ================== Train ==================
+    print("Start training")
+    res = 0
+    for i in range(iteration):
+        print(f"Training {i+1}/{iteration}")
+        cnn.train(alpha, iteration, input_images_train, input_labels_train, kernel, wy)
 
-    # # ================== Train ==================
-    # print("Training...")
-    # for i in range(iteration):
-    #     print(f"Start training {i+1}th")
-    #     cnn.train(alpha, )
-    #     cnn.accuracy(test_layer, "psi/static/MNIST_ORG/result2.txt")
+        temp = cnn2.predict(input_images_test, input_labels_test, kernel, wy)
+
+        if temp > res:
+            res = temp
+        else:
+            if temp > 0.9:
+                break
+            else:
+                kernel = cnn.make_filter(n_layer_hidden, 3, weight_min_value=-0.01, weight_max_value=0.01)
+                wy = cnn.make_filter(n_layer_output, n_layer_hidden, weight_min_value=-0.1, weight_max_value=0.1)
+    
