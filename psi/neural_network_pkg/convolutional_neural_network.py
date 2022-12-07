@@ -1,5 +1,5 @@
 import numpy as np
-import datetime
+from datetime import datetime
 
 
 class ConvolutionalNeuralNetwork:
@@ -17,17 +17,17 @@ class ConvolutionalNeuralNetwork:
             if n > number_of_input:
                 n = number_of_input
 
-            input_images = np.zeros((row, col, n), dtype=np.uint8)
+            input_images = np.zeros((n, row*col), dtype=np.uint8)
 
             i = 0
             while (byte := f.read(row * col)):
                 if i == number_of_input:
                     break
 
-                input_images[:, :, i] = np.frombuffer(byte, dtype=np.uint8).reshape(row, col)
+                input_images[i, :] = np.frombuffer(byte, dtype=np.uint8).reshape(1, row * col)
                 i += 1
 
-        return input_images
+        return input_images / 255
 
     def load_label(self, filename: str, number_of_labels: int=1000) -> np.ndarray:
         with open(filename, "rb") as f:
@@ -36,14 +36,15 @@ class ConvolutionalNeuralNetwork:
             if n > number_of_labels:
                 n = number_of_labels
 
-            labels = np.zeros((n, 1))
+            labels = np.zeros((10, n), dtype=np.uint8)
 
             i = 0
             while (byte := f.read(1)):
                 if i == number_of_labels:
                     break
 
-                labels[i, 0] = int.from_bytes(byte, byteorder="big")
+                val = int.from_bytes(byte, byteorder="big")
+                labels[val, i] = 1
                 i += 1
 
         return labels.T
@@ -52,71 +53,94 @@ class ConvolutionalNeuralNetwork:
         return np.random.uniform(weight_min_value, weight_max_value, size=(number_of_filters, filter_size))
             
     def convolve(self, input_image: np.ndarray, filter_conv: np.ndarray, filter_height: int, filter_width: int, step: int = 1, padding: int = 0) -> np.ndarray:
-        input_image_pad = np.pad(input_image, padding, mode='constant', constant_values=0)
-        input_image_height, input_image_width = input_image_pad.shape
+        input_image_pad = input_image
 
-        output_image = np.zeros((filter_height, filter_width))
+        sections = []
+        for i in range(input_image_pad.shape[1] - filter_height + 1):
+            for j in range(input_image_pad.shape[2] - filter_width + 1):
+                section = input_image_pad[:, i:i + filter_height, j:j + filter_width]
+                section = section.reshape(-1, 1, i + filter_height - i, j + filter_width - j)
+                sections.append(section)
 
-        # scan scan with filter 3x3 over the image from left to right, top to bottom
-        k = 0
-        for i in range(input_image_height - 3 + 1):
-            for j in range(input_image_width - 3 + 1):
-                region = input_image_pad[i:i * step + 3, j:j * step + 3].T.reshape(1, -1)
-                output_image[k, :] = region
-                k += 1
+        self.image_sections = np.concatenate(sections, axis=1)
+        self.image_sections = self.image_sections.reshape(self.image_sections.shape[0] * self.image_sections.shape[1], -1)
+        return self.image_sections.dot(filter_conv)
 
-        self.image_sections = output_image
-
-        return output_image @ filter_conv.T
-
-    def predict(self, input_image: np.ndarray, kernel: np.ndarray, wy: np.ndarray) -> np.ndarray:
-        kernel_layer = self.relu(self.convolve(input_image, kernel, filter_height=kernel.shape[0], filter_width=kernel.shape[1]).flatten())
-        kernel_layer_flatten = kernel_layer.reshape(-1, 1)
-        layer_output = wy @ kernel_layer_flatten
-        return layer_output, kernel_layer_flatten
-
-    def train(self, alpha: int, iter: int, input_images: np.ndarray, labels: np.ndarray, filters: np.ndarray, wy: np.ndarray):
+    def train(self, alpha: int, iter: int, batch_size: int, input_images: np.ndarray, labels: np.ndarray, filters: np.ndarray, wy: np.ndarray):
         output_filters = filters
         output_wy = wy
 
-        # TODO: there is more than one image in the input_images -> 3D array
         for _ in range(iter):
-            kernel_layer = self.relu(self.convolve(input_images, filters, filters.shape[0], filters.shape[1]))
-            kernel_layer_flatten = kernel_layer.reshape(-1, 1)
-            layer_output = wy @ kernel_layer_flatten
+            for i in range(int(len(input_images)/batch_size)):
+                batch_start, batch_end = i * batch_size, (i + 1) * batch_size
+                input_batch = input_images[batch_start:batch_end]
+                input_batch = input_batch.reshape(input_batch.shape[0], 28, 28)
+                
+                layer = self.convolve(input_batch, filters, 3, 3)
+                kernel_layer = layer.reshape(batch_size, -1)
+                kernel_layer = self.tanh(kernel_layer)
+                dropout_mask = np.random.randint(2, size=kernel_layer.shape)
+                kernel_layer *= dropout_mask
+                layer_output = self.softmax(np.dot(kernel_layer, wy))
 
-            layer_output_delta = 2 * 1/layer_output.shape[0] * (layer_output - labels)
-            kernel_layer_1_delta = wy.T @ layer_output_delta
-            # FIXME: activation function
-            kernel_layer_1_delta = kernel_layer_1_delta * self.relu_deriv(kernel_layer_flatten)
-            kernel_layer_1_delta = kernel_layer_1_delta.reshape(kernel_layer.shape)
+                layer_output_delta = 2 * 1/layer_output.shape[0] * (layer_output - labels[batch_start:batch_end])
+                kernel_layer_1_delta = wy @ layer_output_delta.T
+                kernel_layer_1_delta *= dropout_mask.T
 
-            layer_output_weight_delta = layer_output_delta @ kernel_layer_flatten.T
-            kernel_layer_1_weight_delta = kernel_layer_1_delta.T @ self.image_sections
+                kernel_layer_1_delta = kernel_layer_1_delta * self.relu_deriv(kernel_layer.T)
+                kernel_layer_1_delta = kernel_layer_1_delta.reshape(kernel_layer.shape)
 
-            output_wy -= alpha * layer_output_weight_delta
-            output_filters -= alpha * kernel_layer_1_weight_delta
+                layer_output_weight_delta = layer_output_delta.T @ kernel_layer
+                kernel_layer_1_weight_delta = kernel_layer_1_delta.reshape(layer.shape)
+                kernel_layer_1_weight_delta = self.image_sections.T @ kernel_layer_1_weight_delta
+
+                output_wy -= alpha * layer_output_weight_delta.T
+                output_filters -= alpha * kernel_layer_1_weight_delta
 
         return output_wy, output_filters
 
-    def accuracy(self, f_log: str, labels: np.ndarray, input_image: np.ndarray) -> float:
+    def predict(self, input_image: np.ndarray, kernel: np.ndarray, wy: np.ndarray) -> np.ndarray:
+        kernel_layer = self.tanh(self.convolve(input_image, kernel, filter_height=3, filter_width=3).reshape(-1, 1))
+        return wy.T @ kernel_layer
+
+    def accuracy(self, f_log: str, labels: np.ndarray, input_image: np.ndarray, filters: np.ndarray, wy: np.ndarray) -> float:
         acc = 0
 
-        layer_output, _ = self.predict(input_image, self.filters, self.wy)
-        for i in range(labels.shape[1]):
-            output_label = np.zeros((labels.shape[0], 1))
-            output_label[np.argmax(layer_output), i] = 1
-            if np.array_equal(labels[:, i], output_label):
-                acc += 1
+        for i in range(len(input_image)):
+            image = input_image[i:i+1]
+            image = image.reshape(image.shape[0], 28, 28)
+
+            layer_output = self.predict(image, filters, wy)
+            acc += int(np.argmax(layer_output) == np.argmax(labels[i]))      
 
         with open(f_log, "a") as f:
-            f.write(f"Accuracy: {acc/self.labels.shape[1]}  {datetime.today().strftime('%D-%M-%Y %H:%M:%S')}     Acc: {acc}  Goal: {self.goal.shape[1]}\n")
+            f.write(f"Accuracy: {acc/labels.shape[0]}  {datetime.today().strftime('%D-%M-%Y %H:%M:%S')}     Acc: {acc}  Goal: {labels.shape[0]}\n")
 
-        return acc / labels.shape[1]
+        return acc / labels.shape[0]
 
     def relu(self, layer: np.ndarray) -> np.ndarray:
         return np.where(layer > 0, layer, 0)
 
     def relu_deriv(self, layer: np.ndarray) -> np.ndarray:
             return np.greater(layer, 0).astype(int)
+
+    def tanh(self, x):
+        return np.tanh(x)
+
+    def tanh2deriv(self, output):
+        return 1 - (output ** 2)
+
+    def softmax(self,x):
+        temp = np.exp(x)
+        return temp / np.sum(temp, axis=1, keepdims=True)
+
+    def pool(self, input_image: np.ndarray, filter_size: int=2, stride: int=2) -> np.ndarray:
+        input_image_height, input_image_width = input_image.shape
+        output_image = np.zeros((int(input_image_height/stride), int(input_image_width/stride)))
+
+        for i in range(0, input_image_height, stride):
+            for j in range(0, input_image_width, stride):
+                output_image[int(i/stride), int(j/stride)] = np.max(input_image[i:i+filter_size, j:j+filter_size])
+
+        return output_image
     
